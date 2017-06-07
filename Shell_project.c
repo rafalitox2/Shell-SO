@@ -1,4 +1,4 @@
-﻿/**
+/**
 UNIX Shell Project
 
 Sistemas Operativos
@@ -13,12 +13,29 @@ To compile and run the program:
 	(then type ^D to exit program)
 
 **/
+#define ROJO "\x1b[31;1;1m"
+#define NEGRO "\x1b[0m"
+#define VERDE "\x1b[32;1;1m"
+#define AZUL "\x1b[34;1;1m"
+#define CIAN "\x1b[36;1;1m"
+#define MARRON "\x1b[33;1;1m"
+#define PURPURA "\x1b[35;1;1m"
 
 #include "job_control.h"   // remember to compile with module job_control.c 
 #include <string.h>
 
 #define MAX_LINE 256 /* 256 chars per line, per command, should be enough. */
 
+//--------Entradita chula-----
+void print_prompt(){
+			char directorio[1000];
+			char usuario[1000];
+				getlogin_r(usuario,sizeof(usuario));
+				getcwd(directorio,sizeof(directorio));
+			printf("%s%s@my-terminal:%s",VERDE,usuario,NEGRO);
+			printf("%s%s%s $ ",CIAN,directorio,NEGRO);
+			fflush(stdout);
+		}
 // -----------------------------------------------------------------------
 //                            MAIN          
 // -----------------------------------------------------------------------
@@ -43,15 +60,15 @@ int main(void)
 			for(contador=1;contador<=list_size(my_job_list);contador++){
 				maneja2=get_item_bypos(my_job_list,contador);
 				if(!maneja2 -> state == FOREGROUND){
-					pid_waitMan = waitpid(maneja2 -> pgid,&status,WNOHANG|WUNTRACED);
-					if(pid_waitMan==maneja2 -> pgid){
-				  	  status_res=analyze_status(status,&info);
-				 	  if (status_res==SUSPENDED){
+				pid_waitMan = waitpid(maneja2 -> pgid,&status,WNOHANG|WUNTRACED);
+				if(pid_waitMan==maneja2 -> pgid){
+				status_res=analyze_status(status,&info);
+					if (status_res==SUSPENDED){
 						printf("El proceso se ha suspendido\n");
 						maneja2 -> state = STOPPED;
 						printf("El estate es %s \n",state_strings[maneja2 -> state]);
-					  }else {
-							printf("El proceso ha terminado por el envío de una señal de finalización, si es RESPAWNABLE, se reiniciará\n");
+					}else {
+							printf("%sEl proceso ha terminado por el envío de una señal de finalización, si es RESPAWNABLE, se reiniciará\n %s",VERDE,NEGRO);
 						
 							if(maneja2->state==RESPAWNABLE){
 								pid_Resp= fork();
@@ -73,7 +90,7 @@ int main(void)
 								delete_job(my_job_list,maneja2);
 								contador--;
 						}
-					  }
+					}
 				}
 				
 			}
@@ -92,8 +109,7 @@ int main(void)
 
 	while (1)   /* Program terminates normally inside get_command() after ^D is typed*/
 	{   		
-		printf("COMMAND->");
-		fflush(stdout);
+		print_prompt();
 		get_command(inputBuffer, MAX_LINE, args, &background);  /* get next command */
 		
 		if(args[0]==NULL)    continue;   // if empty command
@@ -227,10 +243,10 @@ int main(void)
 				}else{
 					if(respawnable==1){
 						add_job_respawnable(my_job_list, new_job(pid_fork,args[0],RESPAWNABLE),args);
-						printf("Respawnable job running... pid %d, command: %s \n ", pid_fork,args[0]);
+						printf("%sRespawnable job running... pid %d, command: %s%s \n ",ROJO, pid_fork,args[0],NEGRO);
 					}else{
 						add_job(my_job_list, new_job(pid_fork, args[0], BACKGROUND));
-						printf("Background job running... pid %d, command: %s \n ", pid_fork,args[0]);
+						printf("%sBackground job running... pid %d, command: %s%s \n ",PURPURA, pid_fork,args[0],NEGRO);
 						fflush(NULL);
 					}
 				}
